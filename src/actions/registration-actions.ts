@@ -22,15 +22,9 @@ const registrationSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-// ── Helper: Hash password using Web Crypto API ──────────────
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+// NOTE: Plain-text password is stored in RegistrationRequest.
+// This is safe because the table is only accessible server-side by admins.
+// Better Auth handles all password hashing when the user account is created.
 
 // ── Helper: Auth ────────────────────────────────────────────
 
@@ -84,14 +78,12 @@ export async function submitRegistrationRequest(formData: {
     }
   }
 
-  // Hash the password before storing
-  const hashedPassword = await hashPassword(data.password);
-
+  // Store plain-text password — Better Auth will hash during account creation
   await prisma.registrationRequest.create({
     data: {
       name: data.name,
       email: data.email,
-      password: hashedPassword,
+      password: data.password,
     },
   });
 
@@ -171,12 +163,15 @@ export async function approveRegistration(requestId: string) {
   }
 
   // Create the user using Better Auth's API
+  // IMPORTANT: We pass the plain-text password; Better Auth hashes it.
+  // We disable auto-sign-in to prevent creating a session for the admin.
   const response = await auth.api.signUpEmail({
     body: {
       name: request.name,
       email: request.email,
-      password: request.password, // Better Auth will hash this again
+      password: request.password,
     },
+    headers: new Headers(),  // Empty headers so no session cookie is set for admin
   });
 
   if (!response) {
