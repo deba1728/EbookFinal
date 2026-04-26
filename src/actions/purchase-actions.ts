@@ -128,31 +128,28 @@ export async function receivePurchase(purchaseId: string) {
     throw new Error("Only pending purchases can be received");
   }
 
-  // Update book stock for items linked to existing books
-  const updates = purchase.items
-    .filter((item) => item.bookId)
-    .map((item) =>
-      prisma.book.update({
+  // Update book stock and mark purchase as received — all in one transaction
+  await prisma.$transaction(async (tx) => {
+    for (const item of purchase.items.filter((i) => i.bookId)) {
+      await tx.book.update({
         where: { id: item.bookId! },
         data: {
           totalCopies: { increment: item.quantity },
           availableCopies: { increment: item.quantity },
         },
-      })
-    );
-
-  await prisma.$transaction([
-    ...updates,
-    prisma.purchase.update({
+      });
+    }
+    await tx.purchase.update({
       where: { id: purchaseId },
       data: { status: "RECEIVED" },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath("/purchases");
   revalidatePath("/books");
   return { success: true };
 }
+
 
 export async function cancelPurchase(purchaseId: string) {
   await requireAdmin();

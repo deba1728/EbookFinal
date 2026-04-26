@@ -83,6 +83,10 @@ export async function getMemberById(id: string) {
       role: true,
       banned: true,
       banReason: true,
+      phone: true,
+      address: true,
+      membershipType: true,
+      membershipExpiry: true,
       createdAt: true,
       transactions: {
         include: {
@@ -105,4 +109,30 @@ export async function getAllUsers() {
     select: { id: true, name: true, email: true },
     orderBy: { name: "asc" },
   });
+}
+
+export async function updateMemberDetails(
+  id: string,
+  data: {
+    phone?: string;
+    address?: string;
+    membershipType?: string;
+    membershipExpiry?: string; // ISO date string
+  }
+) {
+  await requireAdmin();
+
+  await prisma.user.update({
+    where: { id },
+    data: {
+      phone: data.phone || null,
+      address: data.address || null,
+      membershipType: data.membershipType || "STUDENT",
+      membershipExpiry: data.membershipExpiry
+        ? new Date(data.membershipExpiry)
+        : null,
+    },
+  });
+
+  return { success: true };
 }

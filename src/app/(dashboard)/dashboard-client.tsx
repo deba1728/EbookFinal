@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================================
-// Dashboard Client Component
+// Dashboard Client Component — UI/UX refined
 // ============================================================
 // Role-based dashboard: Admin sees full stats + recent
 // activity. Student sees personal borrowing stats and a
@@ -42,47 +42,57 @@ interface DashboardClientProps {
   userRole: string;
 }
 
+// ── Animation variants ──────────────────────────────────────
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08 },
+    transition: { staggerChildren: 0.07 },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.4 },
+    transition: { duration: 0.35, ease: "easeOut" },
   },
 };
 
-// Admin stat cards
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
+
+// ── Stat card definitions ───────────────────────────────────
+
 const adminStatCards = [
-  { key: "totalBooks", label: "Total Books", icon: BookOpen, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { key: "totalMembers", label: "Total Members", icon: Users, color: "text-violet-500", bg: "bg-violet-500/10" },
-  { key: "activeIssues", label: "Active Issues", icon: ArrowLeftRight, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { key: "overdueBooks", label: "Overdue Books", icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
-  { key: "totalFinesCollected", label: "Fines Collected", icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10" },
-  { key: "availableBooks", label: "Available Books", icon: BookCheck, color: "text-teal-500", bg: "bg-teal-500/10" },
+  { key: "totalBooks",           label: "Total Books",       icon: BookOpen,       color: "text-blue-500",   bg: "bg-blue-500/10"   },
+  { key: "totalMembers",         label: "Total Members",     icon: Users,          color: "text-violet-500", bg: "bg-violet-500/10" },
+  { key: "activeIssues",         label: "Active Issues",     icon: ArrowLeftRight, color: "text-emerald-500",bg: "bg-emerald-500/10"},
+  { key: "overdueBooks",         label: "Overdue Books",     icon: AlertTriangle,  color: "text-red-500",    bg: "bg-red-500/10"    },
+  { key: "totalFinesCollected",  label: "Fines Collected",   icon: IndianRupee,    color: "text-amber-500",  bg: "bg-amber-500/10"  },
+  { key: "availableBooks",       label: "Available Books",   icon: BookCheck,      color: "text-teal-500",   bg: "bg-teal-500/10"   },
 ];
 
-// Student stat cards (subset)
 const studentStatCards = [
-  { key: "totalBooks", label: "Total Books", icon: BookOpen, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { key: "availableBooks", label: "Available Books", icon: BookCheck, color: "text-teal-500", bg: "bg-teal-500/10" },
-  { key: "activeIssues", label: "Your Active Loans", icon: BookMarked, color: "text-violet-500", bg: "bg-violet-500/10" },
+  { key: "totalBooks",    label: "Total Books",       icon: BookOpen,   color: "text-blue-500",   bg: "bg-blue-500/10"   },
+  { key: "availableBooks",label: "Available Books",   icon: BookCheck,  color: "text-teal-500",   bg: "bg-teal-500/10"   },
+  { key: "activeIssues",  label: "Your Active Loans", icon: BookMarked, color: "text-violet-500", bg: "bg-violet-500/10" },
 ];
+
+// ── Component ───────────────────────────────────────────────
 
 export function DashboardClient({ stats, recentActivity, userRole }: DashboardClientProps) {
-  const isAdmin = userRole === "admin";
+  const isAdmin   = userRole === "admin";
   const statCards = isAdmin ? adminStatCards : studentStatCards;
 
   return (
     <div className="space-y-8">
+
+      {/* Page header */}
       <PageHeader
         title="Dashboard"
         description={
@@ -92,7 +102,7 @@ export function DashboardClient({ stats, recentActivity, userRole }: DashboardCl
         }
       />
 
-      {/* Stats Grid */}
+      {/* ── Stat Cards Grid ─────────────────────────────────── */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -100,29 +110,38 @@ export function DashboardClient({ stats, recentActivity, userRole }: DashboardCl
         className={`grid gap-4 sm:grid-cols-2 ${isAdmin ? "lg:grid-cols-3" : "lg:grid-cols-3"}`}
       >
         {statCards.map((card) => {
-          const Icon = card.icon;
-          const value = stats[card.key as keyof DashboardStats];
+          const Icon         = card.icon;
+          const value        = stats[card.key as keyof DashboardStats];
           const displayValue =
             card.key === "totalFinesCollected"
               ? formatCurrency(value)
               : value.toString();
 
           return (
-            <motion.div key={card.key} variants={itemVariants}>
-              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
+            <motion.div
+              key={card.key}
+              variants={itemVariants}
+              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+            >
+              <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+
+                    {/* Label + value */}
+                    <div className="space-y-2 min-w-0">
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         {card.label}
                       </p>
-                      <p className="text-3xl font-bold tracking-tight">
+                      <p className="text-3xl font-bold tracking-tight leading-none">
                         {displayValue}
                       </p>
                     </div>
-                    <div className={`p-2.5 rounded-none ${card.bg} transition-transform group-hover:scale-110`}>
-                      <Icon className={`h-6 w-6 ${card.color}`} />
+
+                    {/* Icon bubble */}
+                    <div className={`shrink-0 p-3 ${card.bg}`}>
+                      <Icon className={`h-5 w-5 ${card.color}`} />
                     </div>
+
                   </div>
                 </CardContent>
               </Card>
@@ -131,35 +150,36 @@ export function DashboardClient({ stats, recentActivity, userRole }: DashboardCl
         })}
       </motion.div>
 
-      {/* Student Quick Actions */}
+      {/* ── Student Quick Actions ───────────────────────────── */}
       {!isAdmin && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.3 }}
         >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
+          <Card className="border border-border/60 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-3">
-                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
+                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2 border-border/60 hover:border-primary/30 hover:bg-accent transition-colors duration-200">
                   <Link href="/books">
-                    <Search className="h-5 w-5" />
-                    <span className="text-sm">Browse Books</span>
+                    <Search className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Browse Books</span>
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
+                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2 border-border/60 hover:border-primary/30 hover:bg-accent transition-colors duration-200">
                   <Link href="/my-books">
-                    <BookMarked className="h-5 w-5" />
-                    <span className="text-sm">My Books</span>
+                    <BookMarked className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">My Books</span>
                   </Link>
                 </Button>
-                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
+                <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2 border-border/60 hover:border-primary/30 hover:bg-accent transition-colors duration-200">
                   <Link href="/notifications">
-                    <Bell className="h-5 w-5" />
-                    <span className="text-sm">Notifications</span>
+                    <Bell className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Notifications</span>
                   </Link>
                 </Button>
               </div>
@@ -168,49 +188,70 @@ export function DashboardClient({ stats, recentActivity, userRole }: DashboardCl
         </motion.div>
       )}
 
-      {/* Recent Activity (shown for both roles) */}
+      {/* ── Recent Activity ─────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: isAdmin ? 0.3 : 0.45 }}
       >
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
+        <Card className="border border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+              {recentActivity.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {recentActivity.length} transaction{recentActivity.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
           </CardHeader>
+
           <CardContent>
             {recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <ArrowLeftRight className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>No recent transactions</p>
-                <p className="text-xs mt-1">Transactions will appear here once books are issued</p>
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                <ArrowLeftRight className="h-8 w-8 opacity-25" />
+                <p className="text-sm font-medium">No recent transactions</p>
+                <p className="text-xs opacity-70">Transactions will appear here once books are issued</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="divide-y divide-border/50">
                 {recentActivity.map((activity, index) => (
                   <motion.div
                     key={activity.id}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.05 }}
-                    className="flex items-center justify-between p-2.5 rounded-none bg-muted/30 hover:bg-muted/50 transition-colors"
+                    transition={{ delay: 0.05 * index, duration: 0.25, ease: "easeOut" }}
+                    whileHover={{ backgroundColor: "var(--color-muted)", transition: { duration: 0.15 } }}
+                    className="flex items-center justify-between gap-4 py-3 px-2 -mx-2 rounded-none transition-colors duration-150 cursor-default"
                   >
+                    {/* Left — book info */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-1.5 h-1.5 rounded-none bg-primary shrink-0" />
+                      {/* Accent dot */}
+                      <div className="h-2 w-2 shrink-0 rounded-full bg-primary/50" />
+
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <p className="text-sm font-medium leading-snug truncate">
                           {activity.book.title}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {activity.user.name} · {activity.type}
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          <span className="font-medium text-foreground/70">{activity.user.name}</span>
+                          {" · "}
+                          <span className="capitalize">{activity.type.toLowerCase()}</span>
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <Badge className={getStatusColor(activity.status)} variant="outline">
+
+                    {/* Right — badge + date */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] px-2 py-0.5 font-medium ${getStatusColor(activity.status)}`}
+                      >
                         {activity.status}
                       </Badge>
-                      <span className="text-xs text-muted-foreground hidden sm:block">
+                      <span className="text-xs text-muted-foreground hidden sm:block tabular-nums">
                         {formatDate(activity.issueDate)}
                       </span>
                     </div>
@@ -221,6 +262,7 @@ export function DashboardClient({ stats, recentActivity, userRole }: DashboardCl
           </CardContent>
         </Card>
       </motion.div>
+
     </div>
   );
 }

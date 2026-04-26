@@ -172,3 +172,18 @@ export async function getPurchaseReport() {
 
   return { purchases, totalSpent };
 }
+
+export async function getDamagedLostReport() {
+  await requireAdmin();
+
+  return prisma.transaction.findMany({
+    where: {
+      condition: { in: ["DAMAGED", "LOST"] },
+    },
+    include: {
+      book: { select: { title: true, author: true, isbn: true, category: true } },
+      user: { select: { name: true, email: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+}

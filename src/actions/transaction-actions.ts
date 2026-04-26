@@ -63,8 +63,8 @@ export async function issueBook(bookId: string, userId: string) {
   }
 
   // Create transaction and update book stock
-  await prisma.$transaction([
-    prisma.transaction.create({
+  await prisma.$transaction(async (tx) => {
+    await tx.transaction.create({
       data: {
         bookId,
         userId,
@@ -72,12 +72,12 @@ export async function issueBook(bookId: string, userId: string) {
         dueDate: generateDueDate(),
         status: "ACTIVE",
       },
-    }),
-    prisma.book.update({
+    });
+    await tx.book.update({
       where: { id: bookId },
       data: { availableCopies: { decrement: 1 } },
-    }),
-  ]);
+    });
+  });
 
   // Notify the user about the book issue
   await createNotification(
@@ -107,8 +107,8 @@ export async function returnBook(transactionId: string) {
   const fine = calculateFine(transaction.dueDate);
   const now = new Date();
 
-  await prisma.$transaction([
-    prisma.transaction.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.transaction.update({
       where: { id: transactionId },
       data: {
         status: "RETURNED",
@@ -116,12 +116,12 @@ export async function returnBook(transactionId: string) {
         fineAmount: fine,
         finePaid: fine === 0,
       },
-    }),
-    prisma.book.update({
+    });
+    await tx.book.update({
       where: { id: transaction.bookId },
       data: { availableCopies: { increment: 1 } },
-    }),
-  ]);
+    });
+  });
 
   // Notify the user about the book return
   const book = await prisma.book.findUnique({ where: { id: transaction.bookId } });
@@ -269,5 +269,52 @@ export async function payFine(transactionId: string) {
   });
 
   revalidatePath("/transactions");
+  return { success: true };
+}
+
+export async function markBookCondition(
+  transactionId: string,
+  condition: "GOOD" | "DAMAGED" | "LOST",
+  conditionNotes?: string
+) {
+  await requireAdmin();
+
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: { book: true },
+  });
+  if (!transaction) throw new Error("Transaction not found");
+
+  const REPLACEMENT_FINE = 500; // ₹500 replacement charge for lost books
+
+  // For LOST books: reduce totalCopies (book is gone), add replacement fine
+  if (condition === "LOST") {
+    await prisma.$transaction(async (tx) => {
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: {
+          condition,
+          conditionNotes: conditionNotes || null,
+          fineAmount: transaction.fineAmount + REPLACEMENT_FINE,
+          finePaid: false,
+        },
+      });
+      await tx.book.update({
+        where: { id: transaction.bookId },
+        data: { totalCopies: { decrement: 1 } },
+      });
+    });
+  } else {
+    await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        condition,
+        conditionNotes: conditionNotes || null,
+      },
+    });
+  }
+
+  revalidatePath("/transactions");
+  revalidatePath("/reports");
   return { success: true };
 }

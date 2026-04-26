@@ -1,9 +1,8 @@
 // ============================================================
 // Prisma Schema — Library Management System
 // ============================================================
-// This schema defines all models for both Better Auth (User,
-// Session, Account, Verification) and the library domain
-// (Book, Transaction, Vendor, Purchase, PurchaseItem).
+// Provider: SQLite (local file — prisma/dev.db)
+// Use `npx prisma migrate dev` to apply schema changes.
 // ============================================================
 
 generator client {
@@ -18,18 +17,23 @@ datasource db {
 // ── Better Auth Models ──────────────────────────────────────
 
 model User {
-  id             String    @id
-  name           String
-  email          String    @unique
-  emailVerified  Boolean   @default(false)
-  image          String?
-  role           String    @default("user")
-  approvalStatus String    @default("APPROVED") // PENDING, APPROVED, REJECTED
-  banned         Boolean?
-  banReason      String?
-  banExpires     Int?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  role             String    @default("user")
+  approvalStatus   String    @default("APPROVED") // PENDING, APPROVED, REJECTED
+  banned           Boolean?
+  banReason        String?
+  banExpires       Int?
+  // ── Membership / Contact ─────────────────────────────
+  phone            String?
+  address          String?
+  membershipType   String    @default("STUDENT") // STUDENT | STAFF | FACULTY
+  membershipExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   sessions       Session[]
   accounts       Account[]
@@ -81,12 +85,11 @@ model Verification {
 // ── Library Domain Models ───────────────────────────────────
 
 /// Registration request submitted by prospective students.
-/// Admin must approve before the user account is created.
 model RegistrationRequest {
   id              String   @id @default(cuid())
   name            String
   email           String   @unique
-  password        String   // hashed before storage
+  password        String
   status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
   rejectionReason String?
   createdAt       DateTime @default(now())
@@ -97,7 +100,7 @@ model RegistrationRequest {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // REGISTRATION_APPROVED | REGISTRATION_REJECTED | BOOK_ISSUED | BOOK_RETURNED | BOOK_RENEWED | DUE_REMINDER | OVERDUE_ALERT | GENERAL
+  type      String
   title     String
   message   String
   read      Boolean  @default(false)
@@ -128,19 +131,22 @@ model Book {
 
 /// Tracks book issues, returns, and renewals
 model Transaction {
-  id         String    @id @default(cuid())
-  bookId     String
-  userId     String
-  type       String    // ISSUE | RETURN | RENEWAL
-  issueDate  DateTime  @default(now())
-  dueDate    DateTime
-  returnDate DateTime?
-  renewCount Int       @default(0)
-  fineAmount Float     @default(0)
-  finePaid   Boolean   @default(false)
-  status     String    @default("ACTIVE") // ACTIVE | RETURNED | OVERDUE
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  bookId         String
+  userId         String
+  type           String    // ISSUE | RETURN | RENEWAL
+  issueDate      DateTime  @default(now())
+  dueDate        DateTime
+  returnDate     DateTime?
+  renewCount     Int       @default(0)
+  fineAmount     Float     @default(0)
+  finePaid       Boolean   @default(false)
+  status         String    @default("ACTIVE") // ACTIVE | RETURNED | OVERDUE
+  // ── Condition tracking ───────────────────────────────
+  condition      String    @default("GOOD") // GOOD | DAMAGED | LOST
+  conditionNotes String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   book Book @relation(fields: [bookId], references: [id])
   user User @relation(fields: [userId], references: [id])

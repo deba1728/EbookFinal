@@ -116,3 +116,56 @@ export function getStatusColor(status: string): string {
   };
   return colors[status] || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
 }
+
+/** Book condition badge color mapping */
+export function getConditionColor(condition: string): string {
+  const colors: Record<string, string> = {
+    GOOD: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    DAMAGED: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+    LOST: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  };
+  return colors[condition] || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+}
+
+/** Membership type badge color mapping */
+export function getMembershipColor(type: string): string {
+  const colors: Record<string, string> = {
+    STUDENT: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    STAFF: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+    FACULTY: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+  };
+  return colors[type] || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+}
+
+/**
+ * Export data to a downloadable CSV file.
+ * @param rows  Array of objects — all values must be primitives
+ * @param filename  Output filename (without .csv)
+ */
+export function exportToCSV(
+  rows: Record<string, string | number | boolean | null | undefined>[],
+  filename: string
+): void {
+  if (rows.length === 0) return;
+
+  const headers = Object.keys(rows[0]);
+  const escape = (v: string | number | boolean | null | undefined): string => {
+    const str = v === null || v === undefined ? "" : String(v);
+    // Wrap in quotes if contains comma, newline, or quote
+    if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+    return str;
+  };
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) => headers.map((h) => escape(row[h])).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${filename}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}

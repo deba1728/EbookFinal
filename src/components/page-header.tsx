@@ -12,18 +12,20 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"
     >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight leading-tight">{title}</h1>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
         )}
       </div>
-      {children && <div className="flex items-center gap-2 mt-3 sm:mt-0">{children}</div>}
+      {children && (
+        <div className="flex items-center gap-2 mt-3 sm:mt-0 shrink-0">{children}</div>
+      )}
     </motion.div>
   );
 }
