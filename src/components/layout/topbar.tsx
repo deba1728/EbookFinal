@@ -70,10 +70,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
         {/* User dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="relative h-8 w-8 rounded-none"
-            >
+            <Button variant="ghost" className="relative h-8 w-8 rounded-none">
               <Avatar className="h-8 w-8 rounded-none">
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold rounded-none">
                   {initials}
@@ -109,7 +106,10 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-red-600 dark:text-red-400">
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="text-red-600 dark:text-red-400"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>
