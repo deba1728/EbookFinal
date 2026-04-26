@@ -41,16 +41,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
     // On mobile, SidebarProvider switches to openMobile state
     // and the Sidebar renders as a Sheet instead
     <SidebarProvider defaultOpen={true}>
-
       {/* ── Fixed left sidebar ──────────────────────────────── */}
       <AppSidebar user={user} />
 
       {/* ── Main content (shifts right on desktop when open) ── */}
       <SidebarInset>
-
         {/* ── Top Navbar ────────────────────────────────────── */}
         <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md">
-
           {/* Hamburger toggle — calls toggleSidebar() from SidebarProvider context */}
           <SidebarTrigger
             id="sidebar-toggle"
@@ -73,10 +70,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </header>
 
         {/* ── Page content ──────────────────────────────────── */}
-        <div className="flex-1 overflow-auto p-4 md:p-6">
-          {children}
-        </div>
-
+        <div className="flex-1 overflow-auto p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
