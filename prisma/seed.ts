@@ -6,8 +6,15 @@
 // ============================================================
 
 import { PrismaClient } from "@prisma/client";
+import { auth } from "../src/lib/auth";
 
 const prisma = new PrismaClient();
+
+const adminAccount = {
+  name: "Admin User",
+  email: "admin@outr.ac.in",
+  password: "Admin@12345",
+};
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -169,14 +176,29 @@ async function main() {
     console.log("📋 Created sample pending registration request");
   }
 
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminAccount.email },
+  });
+  if (!existingAdmin) {
+    const response = await auth.api.signUpEmail({
+      body: adminAccount,
+    });
+
+    if (!response?.user) {
+      throw new Error("Failed to create seeded admin account");
+    }
+
+    console.log("👤 Created seeded admin account");
+  }
+
   console.log("✅ Seed complete!");
   console.log("📚 Created 8 sample books");
   console.log("🏢 Created 2 sample vendors");
   console.log("");
-  console.log("📝 To create an admin account:");
-  console.log("   1. Start the app with: npm run dev");
-  console.log("   2. Sign up at http://localhost:3000/sign-up");
-  console.log("   3. The first user created will be auto-promoted to admin");
+  console.log("📝 Seeded admin login:");
+  console.log(`   Email: ${adminAccount.email}`);
+  console.log(`   Password: ${adminAccount.password}`);
+  console.log("   First seeded user is auto-promoted to admin");
   console.log("");
   console.log("📋 A sample pending registration request (student@example.com) is ready for testing.");
 }
