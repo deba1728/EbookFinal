@@ -19,6 +19,7 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    autoSignIn: false, // Prevent session creation on signUpEmail (admin approval path)
   },
 
   plugins: [
