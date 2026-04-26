@@ -41,6 +41,7 @@ import {
   SidebarMenuItem,
   SidebarMenuBadge,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -65,22 +66,92 @@ interface AppSidebarProps {
 }
 
 const navItems = [
-  { title: "Dashboard",     href: "/",              icon: LayoutDashboard, adminOnly: false, userOnly: false },
-  { title: "Books",         href: "/books",         icon: BookOpen,        adminOnly: false, userOnly: false },
-  { title: "My Books",      href: "/my-books",      icon: BookMarked,      adminOnly: false, userOnly: true  },
-  { title: "Members",       href: "/members",       icon: Users,           adminOnly: true,  userOnly: false },
-  { title: "Registrations", href: "/registrations", icon: ClipboardCheck,  adminOnly: true,  userOnly: false },
-  { title: "Transactions",  href: "/transactions",  icon: ArrowLeftRight,  adminOnly: false, userOnly: false },
-  { title: "Purchases",     href: "/purchases",     icon: ShoppingCart,    adminOnly: true,  userOnly: false },
-  { title: "Reports",       href: "/reports",       icon: BarChart3,       adminOnly: true,  userOnly: false },
-  { title: "Notifications", href: "/notifications", icon: Bell,            adminOnly: false, userOnly: false },
-  { title: "Settings",      href: "/settings",      icon: Settings,        adminOnly: false, userOnly: false },
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: LayoutDashboard,
+    adminOnly: false,
+    userOnly: false,
+  },
+  {
+    title: "Books",
+    href: "/books",
+    icon: BookOpen,
+    adminOnly: false,
+    userOnly: false,
+  },
+  {
+    title: "My Books",
+    href: "/my-books",
+    icon: BookMarked,
+    adminOnly: false,
+    userOnly: true,
+  },
+  {
+    title: "Members",
+    href: "/members",
+    icon: Users,
+    adminOnly: true,
+    userOnly: false,
+  },
+  {
+    title: "Registrations",
+    href: "/registrations",
+    icon: ClipboardCheck,
+    adminOnly: true,
+    userOnly: false,
+  },
+  {
+    title: "Transactions",
+    href: "/transactions",
+    icon: ArrowLeftRight,
+    adminOnly: false,
+    userOnly: false,
+  },
+  {
+    title: "Purchases",
+    href: "/purchases",
+    icon: ShoppingCart,
+    adminOnly: true,
+    userOnly: false,
+  },
+  {
+    title: "Reports",
+    href: "/reports",
+    icon: BarChart3,
+    adminOnly: true,
+    userOnly: false,
+  },
+  {
+    title: "Notifications",
+    href: "/notifications",
+    icon: Bell,
+    adminOnly: false,
+    userOnly: false,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+    adminOnly: false,
+    userOnly: false,
+  },
 ];
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isMobile, setOpen, setOpenMobile } = useSidebar();
   const [pendingCount, setPendingCount] = useState(0);
+
+  const handleNavSelect = useCallback(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+      return;
+    }
+
+    setOpen(false);
+  }, [isMobile, setOpen, setOpenMobile]);
 
   const fetchPendingCount = useCallback(async () => {
     if (user.role !== "admin") return;
@@ -104,7 +175,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
   });
 
   const initials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : user.email[0].toUpperCase();
 
   const handleSignOut = async () => {
@@ -117,7 +193,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
     //   - Desktop: sidebar slides in/out (translate-x), content shifts via SidebarInset gap div
     //   - Mobile:  renders inside a shadcn Sheet (overlay) with dark backdrop
     <Sidebar collapsible="offcanvas">
-
       {/* ── Logo / Brand ──────────────────────────────────────── */}
       <SidebarHeader>
         <SidebarMenu>
@@ -129,7 +204,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">LibraryOS</span>
-                  <span className="truncate text-xs text-muted-foreground">Management System</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Management System
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -156,6 +233,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
+                      onClick={handleNavSelect}
                     >
                       <Link href={item.href}>
                         <Icon />
@@ -193,8 +271,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user.name || "User"}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    <span className="truncate font-semibold">
+                      {user.name || "User"}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -214,10 +296,17 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">{user.name || "User"}</span>
-                      <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                      <span className="truncate font-semibold">
+                        {user.name || "User"}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {user.email}
+                      </span>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
                       {user.role}
                     </Badge>
                   </div>
